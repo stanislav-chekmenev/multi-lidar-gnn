@@ -9,7 +9,7 @@ Firstly, run the standard installation command:
 pip install -r requirements.txt
 ```
 
-Next, you should install pytorch geometric. The example below install a CUDA 12.1 version of the package:
+Next, you should install pytorch geometric's additional packages. The example below installs a CUDA 12.1 version of the package:
 
 ```bash
 pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-2.2.0+cu121.html
