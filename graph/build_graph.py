@@ -5,12 +5,13 @@ import torch
 
 from pathlib import Path
 from torch_geometric.data import Dataset, Data
+from torch_geometric.transforms import NormalizeScale
 
 
 class LivoxTinyDataset(Dataset):
 
-    def __init__(self, root):
-        super().__init__(root)
+    def __init__(self, root, pre_transofrm=NormalizeScale()):
+        super().__init__(root, pre_transform=pre_transofrm)
 
     @property
     def raw_file_names(self):
@@ -42,27 +43,49 @@ class LivoxTinyDataset(Dataset):
             points.columns = points_column_names
             anno.columns = anno_column_names
 
+            # Leave only the points from 6 Lidars
+            points = points[(points['lidar_number'] == 1) | (points['lidar_number'] == 6)]
+
             # Remove unnecessary columns
-            points = points[['x', 'y', 'z']]
-            anno.drop(columns=['tracking_id', 'type'], inplace=True)
+            points = points[['x', 'y', 'z', 'type']]
+            anno.drop(columns=['tracking_id'], inplace=True)
+
 
             # Create one x-variable for the graph holding all three coordinates
             pos = np.concatenate(
                 [points['x'].values, points['y'].values, points['z'].values], axis=0
             ).reshape(3, -1).T
 
-            # Create one y-variable for the graph holding all annotation data
-            y = np.concatenate(
+            # Create a y-variable for the graph holding all point types, which we need for the CE loss
+            y = points['type'].values
+
+            # Create a y-pos variable for the graph holding all annotation data for the bounding boxes, 
+            # which we need for the Huber loss
+            y_bb = np.concatenate(
                 [
                     anno['x'].values, anno['y'].values, anno['z'].values,
                     anno['length'].values, anno['width'].values, anno['height'].values, anno['yaw'].values],
                 axis=0
             ).reshape(7, -1).T
 
+            # Create class labels for each bounding box
+            y_bb_cls = anno['type'].values
+
             # Create a graph
             pos = torch.tensor(pos, dtype=torch.float)
             y = torch.tensor(y, dtype=torch.float)
-            data = Data(x=pos, y=y)
+            y_bb = torch.tensor(y_bb, dtype=torch.float)
+            data = Data(pos=pos, y=y, y_bb=y_bb, y_bb_cls=y_bb_cls)
+
+            # Scale and normalize the data
+            if self.pre_transform is not None:
+                # TODO: find out how to properly normalize the data if it's even needed
+                pass
+
+            # Split into the train and test sets
+            data.train_mask = torch.zeros(data.num_nodes, dtype=torch.bool)
+            data.train_mask[:int(0.8 * data.num_nodes)] = 1
+            data.test_mask = ~data.train_mask
 
             # Save the processed data
             processed_dir_path = Path(self.processed_dir)
@@ -81,4 +104,4 @@ class LivoxTinyDataset(Dataset):
     
 if __name__ == '__main__':
     dataset = LivoxTinyDataset('../data')
-    print(dataset)
+    print(dataset[0])
