@@ -11,14 +11,14 @@ from torch_geometric.transforms import NormalizeScale
 class LivoxDataset(Dataset):
 
     def __init__(self, root, pre_transofrm=NormalizeScale(), size=32):
-        super().__init__(root, pre_transform=pre_transofrm)
         self.size = size
+        super().__init__(root, pre_transform=pre_transofrm)
 
     @property
     def raw_file_names(self):
         points_anno_path = Path()
-        points = [points_anno_path.joinpath('points', '{:08}'.format(i) + '.txt') for i in range(self.size)]
-        anno = [points_anno_path.joinpath('anno', '{:08}'.format(i) + '.txt') for i in range(self.size)]
+        points = [points_anno_path.joinpath('points', '{:08}'.format(i) + '.txt') for i in range(1, self.size)]
+        anno = [points_anno_path.joinpath('anno', '{:08}'.format(i) + '.txt') for i in range(1, self.size)]
         return (points, anno)
 
     @property
@@ -43,9 +43,6 @@ class LivoxDataset(Dataset):
 
             points.columns = points_column_names
             anno.columns = anno_column_names
-
-            # Leave only the points from 6 Lidars
-            points = points[(points['lidar_number'] == 1) | (points['lidar_number'] == 6)]
 
             # Remove unnecessary columns
             points = points[['x', 'y', 'z', 'type']]
@@ -104,5 +101,5 @@ class LivoxDataset(Dataset):
         return data
     
 if __name__ == '__main__':
-    dataset = LivoxDataset('../data', size=32)
+    dataset = LivoxDataset('../data/livox', size=32)
     print(dataset[0])
