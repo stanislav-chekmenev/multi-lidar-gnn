@@ -1,5 +1,5 @@
-# MultiLidarGNN
-An equivariant variational GNN approach for a multi-LiDAR dataset
+# MultiModalGNN
+An equivariant variational GNN approach for a learning on a multi-modal lidar dataset
 
 ### Installation
 
