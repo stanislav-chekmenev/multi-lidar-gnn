@@ -8,16 +8,17 @@ from torch_geometric.data import Dataset, Data
 from torch_geometric.transforms import NormalizeScale
 
 
-class LivoxTinyDataset(Dataset):
+class LivoxDataset(Dataset):
 
-    def __init__(self, root, pre_transofrm=NormalizeScale()):
+    def __init__(self, root, pre_transofrm=NormalizeScale(), size=32):
         super().__init__(root, pre_transform=pre_transofrm)
+        self.size = size
 
     @property
     def raw_file_names(self):
         points_anno_path = Path()
-        points = [points_anno_path.joinpath('points', '{:08}'.format(i) + '.txt') for i in range(32)]
-        anno = [points_anno_path.joinpath('anno', '{:08}'.format(i) + '.txt') for i in range(32)]
+        points = [points_anno_path.joinpath('points', '{:08}'.format(i) + '.txt') for i in range(self.size)]
+        anno = [points_anno_path.joinpath('anno', '{:08}'.format(i) + '.txt') for i in range(self.size)]
         return (points, anno)
 
     @property
@@ -103,5 +104,5 @@ class LivoxTinyDataset(Dataset):
         return data
     
 if __name__ == '__main__':
-    dataset = LivoxTinyDataset('../data')
+    dataset = LivoxDataset('../data', size=32)
     print(dataset[0])
